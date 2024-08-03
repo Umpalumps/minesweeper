@@ -1,9 +1,10 @@
 import { Minesweeper } from "./Minesweeper";
-//import './App.css'
+import './source.css'
+
 function App() {
   
   return (
-    <div className="App">
+    <div className="app">
       <Minesweeper />
       
     </div>

@@ -1,109 +1,118 @@
-import React, { useState } from "react";
-
-// Recursive function to generate grid rows and columns
-const generateGrid = (gridSize, rowIndex, buttonStates, handleButtonClick) => {
-
-  if (rowIndex >= gridSize) {
-    return null;
-  }
-
-  // Generate the current row
-  const currentRow = [];
-  for (let colIndex = 0; colIndex < gridSize; colIndex++) {
-    const index = rowIndex * gridSize + colIndex;
-    currentRow.push(
-      <button
-        key={index}
-        style={{
-          backgroundColor: buttonStates[index] ? "lightgrey" : "rgb(231, 231, 231)",
-          color: "black",
-          border: buttonStates[index] ? "2px solid rgb(167, 166, 166)" : "outset rgb(231, 231, 231)",
-          cursor: "pointer",
-        }}
-        onClick={() => handleButtonClick(index)}
-        className="square"
-      >
-        {buttonStates[index] ? index + 0 : ' _'}
-      </button>
-    );
-  }
-
-  return (
-    <>
-      <div className="board-row">
-        {currentRow}
-      </div>
-      {generateGrid(gridSize, rowIndex + 1, buttonStates, handleButtonClick)}
-    </>
-  );
-};
+import { Button } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import './source.css'
 
 export function Minesweeper() {
-  const gridSize = 3; // Fixed grid size
+  const BOARD_ROWS = 3;
+  const BOARD_COLUMNS = 3;
+  const MINES = 1;
+  const [board, setBoard] = useState([]);
 
-  const [buttonStates, setButtonStates] = useState(
-    Array.from({ length: gridSize * gridSize }, () => false)
-  );
+  useEffect(() => {
+    const generateBoard = (currentRow = 0, currentCol = 0, newBoard = []) => {
+      if (currentRow >= BOARD_ROWS) return newBoard;
 
-  // Handle button click to update its state
-  const handleButtonClick = (index) => {
-    setButtonStates((prevStates) =>
-      prevStates.map((state, i) => (i === index ? true : state))
+      if (!newBoard[currentRow]) newBoard[currentRow] = [];
+
+      if (currentCol >= BOARD_COLUMNS) {
+        return generateBoard(currentRow + 1, 0, newBoard);
+      }
+
+      newBoard[currentRow].push({
+        x: currentCol,
+        y: currentRow,
+        isOpen: false,
+        hasMine: false,
+        isFlaged: false,
+      });
+
+      return generateBoard(currentRow, currentCol + 1, newBoard);
+    };
+    setBoard(generateBoard());
+  }, [BOARD_ROWS, BOARD_COLUMNS]);
+
+  //console.log('board map',board.map(arr=>arr.map((one=> one.isOpen))));
+
+  //Handle button click to update its state
+  const handleButtonClick = (prop) => {
+    const updateBoard = board.map((row) =>
+      row.map((square) =>
+      square.x === prop.x && square.y === prop.y ? { ...square, isOpen: true } : square
+      )
     );
+    console.log(
+      prop.isOpen,
+      board.map((arr) => arr.map((one) => one.isOpen))
+    );
+    setBoard(updateBoard)
+    
   };
+  
+  console.log('Updated board:', board);
 
   return (
-    <div>
-      {generateGrid(gridSize, 0, buttonStates, handleButtonClick)}
+    <div className="board">
+      {board.length > 0 ? (
+        board.map((row, rowIndex) => (
+          <div key={rowIndex} style={{ display: "flex" }}>
+            {row.map((cell, colIndex) => (
+              <Button
+                key={colIndex}
+                style={{
+                  border: cell.isOpen ? 'black' : '3px outset rgb(231, 231, 231)',
+                  width: "30px", // Set width
+                  height: "60px",
+                  margin: '1px',
+                  backgroundColor: cell.isOpen ? 'initial' : 'lightgrey',
+                }}
+                onClick={() => handleButtonClick(cell)}
+              >
+                {/* Display cell coordinates or other cell data */}
+              </Button>
+            ))}
+          </div>
+        ))
+      ) : (
+        <p>Loading board...</p>
+      )}
     </div>
   );
 }
 
-// {matrix.join('').map((number, index)=>{
-//   <button value= {number} style={buttonStyle} onClick={() => handleButtonClick()}>
+// for (let i = 0; i < rows; i++) {
+//   newBoard.push([]);
+//   for (let j = 0; j < columns; j++) {
+//     newBoard[i].push({
+//       x: j,
+//       y: i,
+//       count: 0,
+//       isOpen: false,
+//       hasMine: false,
+//       hasFlag: false,
+//     });
+//   }
+// }
+// setBoard(newBoard)
 
-//     {buttonOpen ? "x" : ""}
-//   </button>
-//   })}
+// const BOARD_ROWS = 10;
+// const BOARD_COLUMNS = 10;
+// const [mines, setMines] = useState(2);
+// const [board, setBoard] = useState([]);
 
-/* <Grid gridSize={gridSize} /> */
-/* <button onClick={() => handleButtonSelection(9)}>9x9</button>
-        <button onClick={() => handleButtonSelection(16)}>16x16</button> */
+// useEffect(() => {
+//   const generateBoard = () => {
+//     return Array.from({ length: BOARD_ROWS }, (_, row) =>
+//       Array.from({ length: BOARD_COLUMNS }, (_, col) => ({
+//         x: col,
+//         y: row,
+//         isOpen: false,
+//         hasMine: false, // Optionally, set random mines later
+//       }))
+//     );
+//   };
 
-// const handleButtonSelection = (gridSize) => {
-//   setGridSize(gridSize);
-//   //console.log(generateButtons(gridSize));
-// };
-
-// //Generate a grid of buttons - creates an array of empty objects - 3x3 => [0,0,0,0,0,0,0,0,0], _ -undefined
-// const generateButtons = (size) => {
-//   return Array.from({ length: size * size }, (_,buttonIndex) => buttonIndex + 1);
-//   //Array.from({ length: gridSize }, () => Array(gridSize).fill(""));
-
-// };
-
-// const RenderRow = ({ start, end, buttons }) => {
-//   return (
-//     <div>
-//       {buttons.slice(start, end).map((index) => (
-//         <button
-//           key={index}
-//           style={{
-//             width: "30px",
-//             height: "30px",
-//             backgroundColor: "lightblue",
-//             cursor: "pointer",
-//           }}
-//         />
-//       ))}
-//     </div>
-//   );
-// };
-
-// // Component to render a grid of buttons
-// const Grid = ({ gridSize }) => {
-
-//   const buttons = generateButtons(gridSize);
+//   setBoard(generateBoard());
+// }, [BOARD_COLUMNS, BOARD_ROWS]);
 
 //   return (
 //     <>
