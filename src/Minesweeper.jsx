@@ -1,73 +1,117 @@
 import { Button } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import './source.css'
+import "./source.css";
 
 export function Minesweeper() {
   const BOARD_ROWS = 3;
   const BOARD_COLUMNS = 3;
   const MINES = 1;
   const [board, setBoard] = useState([]);
+  const [gameOver, setGameOver] = useState(false);
+
+  const isWithinGrid = (indRow, indCol, row, col) => indRow < row && indRow >= 0 && indCol >= 0 && indCol < col;
+
+  // const countAdjacentMines = (row, col, board) => {
+  //   const adjacentCells = [
+  //     [-1, -1], [-1, 0], [-1, 1],
+  //     [0, -1],          [0, 1],
+  //     [1, -1], [1, 0], [1, 1],
+  //   ];}
+  
 
   useEffect(() => {
-    const generateBoard = (currentRow = 0, currentCol = 0, newBoard = []) => {
-      if (currentRow >= BOARD_ROWS) return newBoard;
+    const generateBoard = () => {
+      // if (currentRow >= BOARD_ROWS) return newBoard;
+      // if (!newBoard[currentRow]) newBoard[currentRow] = [];
+      // if (currentCol >= BOARD_COLUMNS) {
+      //   return generateBoard(currentRow + 1, 0, newBoard);}
+      // newBoard[currentRow].push({
+      //   x: currentCol,
+      //   y: currentRow,
+      //   isOpen: false,
+      //   hasMine: false,
+      //   isFlaged: false,
+      // });
 
-      if (!newBoard[currentRow]) newBoard[currentRow] = [];
+      const newBoard = Array.from({ length: BOARD_ROWS }, (_, rowIndex) =>
+        Array.from({ length: BOARD_COLUMNS }, (_, colIndex) => ({
+          x: colIndex,
+          y: rowIndex,
+          isOpen: false,
+          hasMine: false,
+          isFlagged: false,
+          ajMineCount: 0,
+        }))
+      );
 
-      if (currentCol >= BOARD_COLUMNS) {
-        return generateBoard(currentRow + 1, 0, newBoard);
-      }
+      let placedMines = 0;
+      while (placedMines < MINES) {
+        const randomRow = Math.floor(Math.random() * BOARD_ROWS)
+        const randomCol = Math.floor(Math.random() * BOARD_COLUMNS)
 
-      newBoard[currentRow].push({
-        x: currentCol,
-        y: currentRow,
-        isOpen: false,
-        hasMine: false,
-        isFlaged: false,
-      });
+        if (!newBoard[randomRow] || !newBoard[randomRow][randomCol]) {
+          continue
+        }
+       
+        if (!newBoard[randomRow][randomCol].hasMine) {
+          newBoard[randomRow][randomCol].hasMine = true
+          placedMines++
+        }
+      };
 
-      return generateBoard(currentRow, currentCol + 1, newBoard);
+
+      //console.log(newBoard[currentRow][currentCol])
+      //return generateBoard(currentRow, currentCol + 1, newBoard);
+
+      return newBoard
     };
-    setBoard(generateBoard());
-  }, [BOARD_ROWS, BOARD_COLUMNS]);
+    setBoard(generateBoard())
+  }, []);
 
-  //console.log('board map',board.map(arr=>arr.map((one=> one.isOpen))));
+  console.log( "board map", board.map((arr) => arr.map((one) => one.ajMineCount)));
 
-  //Handle button click to update its state
   const handleButtonClick = (prop) => {
-    const updateBoard = board.map((row) =>
-      row.map((square) =>
-      square.x === prop.x && square.y === prop.y ? { ...square, isOpen: true } : square
-      )
-    );
-    console.log(
-      prop.isOpen,
-      board.map((arr) => arr.map((one) => one.isOpen))
-    );
-    setBoard(updateBoard)
-    
+    let updatedBoard = []
+    if (prop.hasMine) {
+      updatedBoard = board.map((row) =>
+        row.map((square) => ({ ...square, isOpen: true }))
+      );
+      setBoard(updatedBoard)
+      setGameOver(true)
+
+    } else {
+      updatedBoard = board.map((row) =>
+        row.map((square) =>
+          square.x === prop.x && square.y === prop.y
+            ? { ...square, isOpen: true }
+            : square
+        )
+      );
+    }
+
+    setBoard(updatedBoard)
   };
-  
-  console.log('Updated board:', board);
+
+  //console.log(board.map((arr) => arr.map((one) => one.isOpen)))
+
+  //console.log("Updated board:", board);
 
   return (
     <div className="board">
       {board.length > 0 ? (
         board.map((row, rowIndex) => (
-          <div key={rowIndex} style={{ display: "flex" }}>
+          <div key={rowIndex}>
             {row.map((cell, colIndex) => (
               <Button
+                className="button"
                 key={colIndex}
                 style={{
-                  border: cell.isOpen ? 'black' : '3px outset rgb(231, 231, 231)',
-                  width: "30px", // Set width
-                  height: "60px",
-                  margin: '1px',
-                  backgroundColor: cell.isOpen ? 'initial' : 'lightgrey',
+                  border: cell.isOpen ? " 1px solid lightgrey" : "3px outset rgb(231, 231, 231)",
+                  backgroundColor: cell.isOpen ? "gold" : "lightgrey",
                 }}
                 onClick={() => handleButtonClick(cell)}
               >
-                {/* Display cell coordinates or other cell data */}
+                {cell.isOpen && cell.hasMine ? "💣" : ""}
               </Button>
             ))}
           </div>
@@ -93,37 +137,3 @@ export function Minesweeper() {
 //   }
 // }
 // setBoard(newBoard)
-
-// const BOARD_ROWS = 10;
-// const BOARD_COLUMNS = 10;
-// const [mines, setMines] = useState(2);
-// const [board, setBoard] = useState([]);
-
-// useEffect(() => {
-//   const generateBoard = () => {
-//     return Array.from({ length: BOARD_ROWS }, (_, row) =>
-//       Array.from({ length: BOARD_COLUMNS }, (_, col) => ({
-//         x: col,
-//         y: row,
-//         isOpen: false,
-//         hasMine: false, // Optionally, set random mines later
-//       }))
-//     );
-//   };
-
-//   setBoard(generateBoard());
-// }, [BOARD_COLUMNS, BOARD_ROWS]);
-
-//   return (
-//     <>
-//       {Array.from({ length: gridSize }).map((_, rowIndex) => (
-//         <RenderRow
-//           key={rowIndex}
-//           start={rowIndex * gridSize}
-//           end={(rowIndex + 1) * gridSize}
-//           buttons={buttons}
-//         />
-//       ))}
-//     </>
-//   );
-// };
