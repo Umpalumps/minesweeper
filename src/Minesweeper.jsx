@@ -3,9 +3,9 @@ import React, { useEffect, useState } from "react";
 import "./source.css";
 
 export function Minesweeper() {
-  const BOARD_ROWS = 4;
-  const BOARD_COLUMNS = 4;
-  const MINES = 1;
+  const BOARD_ROWS = 8;
+  const BOARD_COLUMNS = 8;
+  const MINES = 5;
   const [board, setBoard] = useState([]);
   const [gameOver, setGameOver] = useState(false);
 
@@ -33,101 +33,123 @@ export function Minesweeper() {
           ajMineCount: 0,
         }))
       );
-      // let placedMines = 0;
-      // while (placedMines < MINES) {
-      //   const randomRow = Math.floor(Math.random() * BOARD_ROWS)
-      //   const randomCol = Math.floor(Math.random() * BOARD_COLUMNS)
 
-      //   if (!newBoard[randomRow] || !newBoard[randomRow][randomCol]) {
-      //     continue
-      //   }
-       
-      //   if (!newBoard[randomRow][randomCol].hasMine) {
-      //     newBoard[randomRow][randomCol].hasMine = true
-      //     placedMines++
-      //   }
-      // };
-      // //console.log(newBoard[currentRow][currentCol])
-      // //return generateBoard(currentRow, currentCol + 1, newBoard);
-     
-      newBoard[0][0].isBomb = true
-      newBoard[0][2].isBomb = true
-      newBoard[2][2].isBomb = true
+      let placedMines = 0;
+      while (placedMines < MINES) {
+        const randomRow = Math.floor(Math.random() * BOARD_ROWS)
+        const randomCol = Math.floor(Math.random() * BOARD_COLUMNS)
 
-    
+        if (!newBoard[randomRow] || !newBoard[randomRow][randomCol]) {
+          continue
+        }
+
+        if (!newBoard[randomRow][randomCol].isBomb) {
+          newBoard[randomRow][randomCol].isBomb = true
+          placedMines++
+        }
+      };
+      
+      
+
+      // newBoard[0][0].isBomb = true;
+      // newBoard[0][2].isBomb = true;
+      // newBoard[1][1].isBomb = true
+
       const countAjMines = (board, row, col) => {
         const offsets = [-1, 0, 1];
         let count = 0;
-      
+
         for (let i of offsets) {
           for (let j of offsets) {
             if (i === 0 && j === 0) continue; // Skiping the cell itself
-      
+
             const ajRow = row + i;
             const ajCol = col + j;
-      
+
             if (
-              ajRow >= 0 && ajRow < BOARD_ROWS &&
-              ajCol >= 0 && ajCol < BOARD_COLUMNS &&
+              ajRow >= 0 &&
+              ajRow < BOARD_ROWS &&
+              ajCol >= 0 &&
+              ajCol < BOARD_COLUMNS &&
               board[ajRow][ajCol].isBomb
             ) {
               count++;
             }
           }
         }
-      
+
         return count;
       };
 
-
       newBoard.forEach((row, rowIndex) =>
-      row.forEach((cell, colIndex) => {
-        if (!cell.isBomb) {
-          cell.ajMineCount = countAjMines(newBoard, rowIndex, colIndex);
-        }
-      })
-    );
+        row.forEach((cell, colIndex) => {
+          if (!cell.isBomb) {
+            cell.ajMineCount = countAjMines(newBoard, rowIndex, colIndex);
+          }
+        })
+      );
 
-
-      return newBoard
+      return newBoard;
     };
 
-    setBoard(generateBoard())
-
+    setBoard(generateBoard());
   }, []);
 
+  // console.log(
+  //   "board map",
+  //   board.map((row) => row.map((col) => ({ ...col })))
+  // );
 
+  const handleCellClick = (row, col) => {
+    if (gameOver) return
 
+    const newBoard = board.map(row => row.map(cell => ({ ...cell })))
+    const cell = newBoard[row][col]
 
-  // const updateBoard = (board, row, col) => {
-  //   const newBoard = board.map(row => row.map(cell => ({ ...cell })));}
-
-  console.log( "board map", board.map((row) => row.map((col) => ({...col})))); //
-
-  const handleButtonClick = (prop) => {
-    let updatedBoard = []
-    if (prop.hasMine) {
-      updatedBoard = board.map((row) =>
-        row.map((square) => ({ ...square, isOpen: true }))
-      );
-      setBoard(updatedBoard)
+    if (cell.isBomb) {
       setGameOver(true)
-
-    } else {
-      updatedBoard = board.map((row) =>
-        row.map((square) =>
-          square.x === prop.x && square.y === prop.y
-            ? { ...square, isOpen: true }
-            : square
-        )
-      );
+      console.log("game over")
+      return;
     }
 
-    setBoard(updatedBoard)
+    if (cell.ajMineCount > 0) {  //opening only the cell that's adjacent to a bomb 
+      cell.isOpen = true
+    } else {
+      revealCell(newBoard, cell) // if clicked on 0 recursively looping to check adjacent cells to explode all xeros
+    }
+    
+    setBoard(newBoard)
+  };
+
+
+
+  const revealCell = (board, cell) => {
+    const offsets = [-1, 0, 1];
+    
+    if (cell.isOpen || cell.isBomb) return;
+
+    cell.isOpen = true;
+
+    for(let i of offsets){
+      for(let j of offsets){
+        if(i===0 && j === 0) continue;
+        const ajRow = cell.x + i;
+        const ajCol = cell.y + j;
+
+        if(ajRow >= 0 && ajRow < BOARD_ROWS && ajCol >= 0 && ajCol < BOARD_COLUMNS){
+          const ajCell = board[ajRow][ajCol]
+          if (!ajCell.isOpen && !ajCell.isBomb) {
+            if (ajCell.ajMineCount === 0) {
+              revealCell(board, ajCell);
+            } else {
+              ajCell.isOpen = true // opened adjacent cells that are adjacent to the mines but not recursively
+            }} 
+        }
+      }
+    }
   };
 
   //console.log(board.map((arr) => arr.map((one) => one.isOpen)))
-
   //console.log("Updated board:", board);
 
   return (
@@ -140,12 +162,14 @@ export function Minesweeper() {
                 className="button"
                 key={colIndex}
                 style={{
-                  border: cell.isOpen ? " 1px solid lightgrey" : "3px outset rgb(231, 231, 231)",
-                  backgroundColor: cell.isOpen ? "lightgreen" : "lightgrey",
+                  border: cell.isOpen
+                    ? " 1px solid lightgrey"
+                    : "3px outset rgb(231, 231, 231)",
+                  backgroundColor: cell.isOpen ? "white" : "lightgrey",
                 }}
-                onClick={() => handleButtonClick(cell)}
+                onClick={() => handleCellClick(rowIndex, colIndex)}
               >
-                {cell.isOpen && cell.isBomb ? "💣" : cell.ajMineCount}
+                {cell.isOpen ? (cell.isBomb ? "💣" : cell.ajMineCount) : ""}
               </Button>
             ))}
           </div>
@@ -156,19 +180,6 @@ export function Minesweeper() {
     </div>
   );
 }
-
-
-
-//const isWithinGrid = (indRow, indCol, row, col) => indRow < row && indRow >= 0 && indCol >= 0 && indCol < col;
-
-// const countAdjacentMines = (row, col, board) => {
-//   const adjacentCells = [
-//     [-1, -1], [-1, 0], [-1, 1],
-//     [0, -1],          [0, 1],
-//     [1, -1], [1, 0], [1, 1],
-//   ];}
-
-
 
 // for (let i = 0; i < rows; i++) {
 //   newBoard.push([]);
