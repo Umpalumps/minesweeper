@@ -5,6 +5,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  background-image: url("/Users/olhakhadzhyohlo/Desktop/Coding-docs/minesweeper/src/components/pngtree-background-of-a-textured-brick-wall-in-black-image_13632874.png");
+  background-size: 90%
 }
 
 code {

@@ -5,9 +5,9 @@ import "./source.css";
 export function Minesweeper() {
   const BOARD_ROWS = 8;
   const BOARD_COLUMNS = 8;
-  const MINES = 5;
-  const [board, setBoard] = useState([]);
-  const [gameOver, setGameOver] = useState(false);
+  const [mines, setMines] = useState(5)
+  const [board, setBoard] = useState([])
+  const [gameOver, setGameOver] = useState(false)
 
   useEffect(() => {
     const generateBoard = () => {
@@ -35,7 +35,7 @@ export function Minesweeper() {
       );
 
       let placedMines = 0;
-      while (placedMines < MINES) {
+      while (placedMines < mines) {
         const randomRow = Math.floor(Math.random() * BOARD_ROWS);
         const randomCol = Math.floor(Math.random() * BOARD_COLUMNS);
 
@@ -61,15 +61,15 @@ export function Minesweeper() {
           for (let j of offsets) {
             if (i === 0 && j === 0) continue; // Skiping the cell itself
 
-            const ajRow = row + i;
-            const ajCol = col + j;
+            const ajRow = row + i; // calculation coordinates for the aj row
+            const ajCol = col + j; // calculation coordinates for the aj col
 
             if (
-              ajRow >= 0 &&
+              ajRow >= 0 && // checking board limits
               ajRow < BOARD_ROWS &&
               ajCol >= 0 &&
               ajCol < BOARD_COLUMNS &&
-              board[ajRow][ajCol].isBomb
+              board[ajRow][ajCol].isBomb // if aj cell to the one im checking contains a bomb
             ) {
               count++;
             }
@@ -98,7 +98,7 @@ export function Minesweeper() {
   //   board.map((row) => row.map((col) => ({ ...col })))
   // );
 
-  const handleCellClick = (row, col) => {
+  const handleCellClick = (row, col) => {           ///// LEFT CLICK
     if (gameOver) return;
 
     const newBoard = board.map((row) => row.map((cell) => ({ ...cell })));
@@ -122,22 +122,25 @@ export function Minesweeper() {
     setBoard(newBoard);
   };
 
-  const handleRightClick = (row, col, e) => {                             ///// RIGHT CLICK
-    e.preventDefault();
-    console.log(`Right-clicked on cell (${row}, ${col})`);
-    const newBoard = board.map((r) => r.map((cell) => ({ ...cell })));
-    const cell = newBoard[row][col];
+  const handleRightClick = (row, col, e) => {         ///// RIGHT CLICK
+    e.preventDefault()
 
-    cell.isFlagged = !cell.isFlagged;
+    console.log(`Right-clicked on cell (${row}, ${col})`)
+    const newBoard = board.map((r) => r.map((cell) => ({ ...cell })))
+    const cell = newBoard[row][col]
 
-    setBoard(newBoard);
+    cell.isFlagged = !cell.isFlagged
+
+    if(mines > 0)setMines(mines-1)
+
+    setBoard(newBoard)
   };
 
   const revealAllCells = (board) => {
     board.forEach((row) => row.forEach((cell) => (cell.isOpen = true)));
   };
 
-  const revealCell = (board, cell) => {
+  const revealCell = (board, cell) => {        /// EXPLOADING ZEROS PLUS ADJACENT CELLS TO BOMBS
     const offsets = [-1, 0, 1];
 
     if (cell.isOpen || cell.isBomb) return;
@@ -179,48 +182,70 @@ export function Minesweeper() {
     }
     return "";
   };
+
   //console.log(board.map((arr) => arr.map((one) => one.isOpen)))
   //console.log("Updated board:", board);
 
-    const checkClick = (e) => {
-      e.preventDefault();
-      console.log('Right-click detected');
-    };
+  const checkClick = (e) => {
+    e.preventDefault();
+    console.log("Right-click detected");
+  };
 
   return (
-    <><div className="board">
-      {board.length > 0 ? (
-        board.map((row, rowIndex) => (
-          <div key={rowIndex}>
-            {row.map((cell, colIndex) => (
-              
-              <Button
-                className="button"
-                key={colIndex}
-                style={{
-                  border: cell.isOpen
-                    ? " 1px solid lightgrey"
-                    : "3px outset rgb(231, 231, 231)",
-                  backgroundColor: cell.isOpen ? "white" : "lightgrey",
-                }}
-                onClick={() => handleCellClick(rowIndex, colIndex)}
-                onContextMenu={(e) => handleRightClick(rowIndex, colIndex, e)}
-              >
-                {showCellContent(cell)}
-              </Button>
-            ))}
-          </div>
-        ))
-      ) : (
-        <p>Loading board...</p>
-      )}
-    </div>
-    <div onContextMenu={checkClick} style={{ width: '100px', height: '100px', border: '1px solid black' }}>
-      Right Click Here
-    </div>
+    <>
+      <div className="board">
+        <div
+        className='board-head'
+          onContextMenu={checkClick}
+          
+        >
+          Number of 💣: {mines}
+          
+        </div>
+        <div className = 'grid'>
+        <div>
+          {board.length > 0 ? (
+            board.map((row, rowIndex) => (
+              <div key={rowIndex}>
+                {row.map((cell, colIndex) => (
+                  <Button
+                    className="cell"
+                    key={colIndex}
+                    style={{
+                      border: cell.isOpen
+                        ? " 1px solid rgb(136, 136, 136)"
+                        : "4px outset rgb(255, 255, 255)",
+                      backgroundColor: cell.isOpen ? "#C8D5E4" : "lightgrey",
+                    }}
+                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                    onContextMenu={(e) =>
+                      handleRightClick(rowIndex, colIndex, e)
+                    }
+                  >
+                    {showCellContent(cell)}
+                  </Button>
+                ))}
+              </div>
+            ))
+          ) : (
+            <p>Loading board...</p> // 💥
+          )}
+        </div>
+        </div>
+      </div>
     </>
   );
 }
+
+// 1) . if the cell with number is open && its already touching all the bumbs its adjacent to && its stil has cells closed near it
+// clicking on it again should open near by closed cell if its not a bomb.
+//If its a number open just one and if ots a zero, explode it again
+
+// 2) . if all the cells are open and bombs are still closed / flagged => you win
+
+// 3) . Timer
+
+
 
 // for (let i = 0; i < rows; i++) {
 //   newBoard.push([]);
