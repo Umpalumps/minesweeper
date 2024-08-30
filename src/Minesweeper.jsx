@@ -4,14 +4,15 @@ import "./source.css";
 import { Timer } from "./components/Timer";
 
 export function Minesweeper() {
-  const BOARD_ROWS = 7;
-  const BOARD_COLUMNS = 7;
-  const [mines, setMines] = useState(4);
-  const [board, setBoard] = useState([]);
-  const [gameOver, setGameOver] = useState(false);
-  const [startGame, setStartGame] = useState(false);
+  const BOARD_ROWS = 8
+  const BOARD_COLUMNS = 8
+  const [mines, setMines] = useState(4)
+  const [board, setBoard] = useState([])
+  const [gameOver, setGameOver] = useState(false)
+  const [startGame, setStartGame] = useState(false)
   const [status, setStatus] = useState('closed')
   const [win, setWin] = useState(false)
+  const [emojiStatus, setEmojiStatus] = useState('😊')
 
   const boardStyle = {
     width: "512px",
@@ -24,7 +25,24 @@ export function Minesweeper() {
     flexDirection: "column",
     alignItems: "center",
     background: "rgb(176, 162, 162)",
-  };
+  }
+
+  const emojiContainerStyle = {
+    position: "absolute",
+    top: "15px",
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    fontSize: "2rem",
+    zIndex: 1, // Make sure it is above the board
+  }
+
+  const emojiSize ={
+    border:"3px outset rgb(255, 255, 255)", width: "42px",         // Set width
+    height: "42px", display: "flex",      // To center content
+    alignItems: "center", // Center content vertically, justifycontent center horizontaly
+    justifyContent: "center"
+  }
 
   const generateBoard = () => {
     // if (currentRow >= BOARD_ROWS) return newBoard;
@@ -108,8 +126,8 @@ export function Minesweeper() {
   };
 
   useEffect(() => {
-    setBoard(generateBoard());
-  }, []);
+    setBoard(generateBoard())
+  }, [])
   // console.log(
   //   "board map",
   //   board.map((row) => row.map((col) => ({ ...col })))
@@ -120,7 +138,8 @@ export function Minesweeper() {
     setGameOver(false)
     setWin(false)
     setBoard(generateBoard());
-    console.log(board.map((row) => row.map((cell) => ({ ...cell }))));
+    setEmojiStatus('😊')
+    console.log(board.map((row) => row.map((cell) => ({ ...cell })))) /// on restart shows previous board, why???
   };
 
   const checkCellStatus = () =>{
@@ -141,32 +160,32 @@ export function Minesweeper() {
       alert('You WIN')
        
     }
-  };
-
+  }
 
   const handleCellClick = (row, col) => {
-    if (gameOver || win) return;
-    if (!startGame) setStartGame(true);
+    if (gameOver || win) return
+    if (!startGame) setStartGame(true)
 
-    const newBoard = board.map((row) => row.map((cell) => ({ ...cell })));
-    const cell = newBoard[row][col];
+    const newBoard = board.map((row) => row.map((cell) => ({ ...cell })))
+    const cell = newBoard[row][col]
 
     if (cell.isBomb) {
       openAllCells(newBoard)
       setGameOver(true)
       setBoard(newBoard)
+      setEmojiStatus('😭')
       //alert("game over")
       console.log("game over")
       return
     }
     if (cell.isOpen) {
-      secondClick(newBoard, cell);
+      secondClick(newBoard, cell)
     } else {
       if (cell.ajMineCount > 0) {
-        cell.isOpen = true;
-        setStatus('open');
+        cell.isOpen = true
+        setStatus('open')
       } else {
-        revealCell(newBoard, cell);
+        revealCell(newBoard, cell)
       }
     }
 
@@ -217,6 +236,14 @@ export function Minesweeper() {
 
     setBoard(newBoard);
   };
+
+  const handleMouseDown = () => {
+    setEmojiStatus('😲')
+  }
+
+  const handleMouseUp = () => {
+    setEmojiStatus('😊')
+  }
 
   const openAllCells = (board) => {
     board.forEach((row) => row.forEach((cell) => (cell.isOpen = true)));
@@ -277,8 +304,10 @@ export function Minesweeper() {
     <>
       <div style={boardStyle} className="board">
         <div className="board-head">
-          Number of 💣: {mines}
+          <div>Number of 💣: {mines}
           <Timer startGame={startGame} gameOver={gameOver} onWin= {win} />
+          </div>
+          <div style={emojiContainerStyle}><div style={emojiSize}>{emojiStatus}</div></div> 
         </div>
         <div className="grid">
           <div>
@@ -298,9 +327,9 @@ export function Minesweeper() {
                         backgroundColor: cell.isOpen ? "#C8D5E4" : "lightgrey",
                       }}
                       onClick={() => handleCellClick(rowIndex, colIndex)}
-                      onContextMenu={(e) =>
-                        handleRightClick(rowIndex, colIndex, e)
-                      }
+                      onContextMenu={(e) => handleRightClick(rowIndex, colIndex, e)}
+                      onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                      onMouseUp={handleMouseUp}
                     >
                       {showCellContent(cell)}
                     </Button>

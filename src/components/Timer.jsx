@@ -29,7 +29,7 @@ export const Timer = ({startGame,gameOver, onWin}) =>{
     return (
 
         <Typography sx={{ fontSize: 14 }} color="text.secondary">
-          Timer / Seconds: {startGame ? seconds: 0}
+          Timer: {startGame ? seconds: 0}
         </Typography>
     
       )
